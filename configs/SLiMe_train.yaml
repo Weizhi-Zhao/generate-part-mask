@@ -1,0 +1,23 @@
+accelerator: "cpu"
+# accelerator: 'gpu'
+devices: "auto"
+# devices:
+#   - "cuda:0"
+#   - "cuda:1"
+part_names:
+  - "background"
+  - "body"
+  - "mirror"
+  - "plate"
+  - "door"
+  - "wheel"
+  - "headlight"
+  - "window"
+train_data_dir: "datasets/bus/train"
+val_data_dir: "datasets/bus/val"
+test_data_dir: "datasets/bus/test"
+min_crop_ratio: 0.6
+num_patchs_per_side: 1
+patch_size: 512
+
+output_dir: "/output"

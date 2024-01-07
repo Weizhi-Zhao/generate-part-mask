@@ -7,7 +7,7 @@ import albumentations as A
 from albumentations.pytorch import ToTensorV2
 import cv2
 import numpy as np
-from src.utils import get_random_crop_coordinates
+from SLiMe.src.utils import get_random_crop_coordinates
 from glob import glob
 import os
 

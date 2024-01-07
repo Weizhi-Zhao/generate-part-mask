@@ -5,3 +5,5 @@
 *.bin
 *.pyc
 /datasets/
+/outputs/
+__pycache__/

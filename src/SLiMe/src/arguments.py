@@ -99,5 +99,5 @@ def init_args():
     parser = add_dataset_args(parser)
     parser = add_train_args(parser)
     parser = add_test_args(parser)
-    args = parser.parse_args()
+    args = parser.parse_args("")
     return args

@@ -59,7 +59,7 @@ class Slime(pl.LightningModule):
         self.embeddings_to_optimize = []
         if self.config.train:
             for i in range(1, self.num_parts):
-                embedding = self.text_embedding[:, i : i + 1].clone()
+                embedding = self.text_embedding[:, i: i + 1].clone()
                 embedding.requires_grad_(True)
                 self.embeddings_to_optimize.append(embedding)
 
@@ -77,7 +77,8 @@ class Slime(pl.LightningModule):
 
     def on_fit_start(self) -> None:
         self.checkpoint_dir = os.path.join(
-            self.config.output_dir, "checkpoints", self.logger.log_dir.split("/")[-1]
+            self.config.output_dir, "checkpoints", self.logger.log_dir.split(
+                "/")[-1]
         )
         os.makedirs(self.checkpoint_dir, exist_ok=True)
         self.stable_diffusion.setup(self.device)
@@ -87,18 +88,21 @@ class Slime(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         image, mask = batch
-        num_pixels = torch.zeros(self.num_parts, dtype=torch.int64).to(self.device)
+        num_pixels = torch.zeros(
+            self.num_parts, dtype=torch.int64).to(self.device)
         values, counts = torch.unique(mask, return_counts=True)
         num_pixels[values.type(torch.int64)] = counts.type(torch.int64)
         num_pixels[0] = 0
-        pixel_weights = torch.where(num_pixels > 0, num_pixels.sum() / num_pixels, 0)
+        pixel_weights = torch.where(
+            num_pixels > 0, num_pixels.sum() / num_pixels, 0)
         pixel_weights[0] = 1
         mask = mask[0]
         text_embedding = torch.cat(
             [
                 self.text_embedding[:, 0:1],
-                *list(map(lambda x: x.to(self.device), self.embeddings_to_optimize)),
-                self.text_embedding[:, 1 + len(self.embeddings_to_optimize) :],
+                *list(map(lambda x: x.to(self.device),
+                      self.embeddings_to_optimize)),
+                self.text_embedding[:, 1 + len(self.embeddings_to_optimize):],
             ],
             dim=1,
         )
@@ -164,16 +168,20 @@ class Slime(pl.LightningModule):
             if torch.all(part_mask == 0):
                 continue
             iou = calculate_iou(
-                torch.where(final_mask == idx, 1, 0).type(torch.uint8), part_mask
+                torch.where(final_mask == idx, 1, 0).type(
+                    torch.uint8), part_mask
             )
             ious.append(iou)
-            self.log(f"train {part_name} iou", iou, on_step=True, sync_dist=True)
+            self.log(f"train {part_name} iou", iou,
+                     on_step=True, sync_dist=True)
         mean_iou = sum(ious) / len(ious)
 
         self.log("loss2", loss2.detach().cpu(), on_step=True, sync_dist=True)
-        self.log("sd_loss", sd_loss.detach().cpu(), on_step=True, sync_dist=True)
+        self.log("sd_loss", sd_loss.detach().cpu(),
+                 on_step=True, sync_dist=True)
         self.log("loss1", loss1.detach().cpu(), on_step=True, sync_dist=True)
-        self.log("train mean iou", mean_iou.cpu(), on_step=True, sync_dist=True)
+        self.log("train mean iou", mean_iou.cpu(),
+                 on_step=True, sync_dist=True)
         self.log("loss", loss.detach().cpu(), on_step=True, sync_dist=True)
 
         return loss
@@ -228,7 +236,8 @@ class Slime(pl.LightningModule):
                     train=False,
                 )
 
-                sd_cross_attention_maps2 = sd_cross_attention_maps2.flatten(1, 2)
+                sd_cross_attention_maps2 = sd_cross_attention_maps2.flatten(
+                    1, 2)
 
                 max_values = sd_cross_attention_maps2.max(dim=1).values
                 min_values = sd_cross_attention_maps2.min(dim=1).values
@@ -266,7 +275,8 @@ class Slime(pl.LightningModule):
                             mask_y_start:mask_y_end,
                             mask_x_start:mask_x_end,
                         ] += (avg_self_attention_map / coef) + (
-                            min_values[mask_id] - avg_self_attention_map_min / coef
+                            min_values[mask_id] -
+                            avg_self_attention_map_min / coef
                         )
                         aux_attention_map[
                             mask_id,
@@ -288,11 +298,12 @@ class Slime(pl.LightningModule):
                         self.embeddings_to_optimize,
                     )
                 ),
-                self.text_embedding[:, 1 + len(self.embeddings_to_optimize) :],
+                self.text_embedding[:, 1 + len(self.embeddings_to_optimize):],
             ],
             dim=1,
         )
-        self.test_t_embedding = torch.cat([self.uncond_embedding, text_embedding])
+        self.test_t_embedding = torch.cat(
+            [self.uncond_embedding, text_embedding])
 
     def on_validation_epoch_start(self):
         self.val_ious = []
@@ -310,10 +321,12 @@ class Slime(pl.LightningModule):
             if torch.all(part_mask == 0):
                 continue
             iou = calculate_iou(
-                torch.where(final_mask == idx, 1, 0).type(torch.uint8), part_mask
+                torch.where(final_mask == idx, 1, 0).type(
+                    torch.uint8), part_mask
             )
             ious.append(iou)
-            self.log(f"val {part_name} iou", iou.cpu(), on_step=True, sync_dist=True)
+            self.log(f"val {part_name} iou", iou.cpu(),
+                     on_step=True, sync_dist=True)
         mean_iou = sum(ious) / len(ious)
         self.val_ious.append(mean_iou)
         self.log("val mean iou", mean_iou.cpu(), on_step=True, sync_dist=True)
@@ -350,7 +363,7 @@ class Slime(pl.LightningModule):
             [
                 text_embedding[:, 0:1],
                 *list(map(lambda x: x.to(self.device), embeddings_to_optimize)),
-                text_embedding[:, 1 + len(embeddings_to_optimize) :],
+                text_embedding[:, 1 + len(embeddings_to_optimize):],
             ],
             dim=1,
         )
@@ -395,7 +408,8 @@ class Slime(pl.LightningModule):
                 if torch.all(part_mask == 0):
                     continue
                 iou = calculate_iou(
-                    torch.where(final_mask == idx, 1, 0).type(torch.uint8), part_mask
+                    torch.where(final_mask == idx, 1, 0).type(
+                        torch.uint8), part_mask
                 )
                 # self.ious[part_name].append(iou.cpu())
                 self.log(
@@ -408,7 +422,8 @@ class Slime(pl.LightningModule):
         print("max val mean iou: ", self.max_val_iou)
 
     def configure_optimizers(self):
-        parameters = [{"params": self.embeddings_to_optimize, "lr": self.config.lr}]
+        parameters = [
+            {"params": self.embeddings_to_optimize, "lr": self.config.lr}]
         optimizer = getattr(optim, self.config.optimizer)(
             parameters,
             lr=self.config.lr,
