@@ -1,0 +1,30 @@
+category_name: bus
+part_aggregation:
+  bus_body:
+    - frontside
+    - leftside
+    - rightside
+    - backside
+    - roofside
+  bus_mirror:
+    - leftmirror
+    - rightmirror
+  bus_plate:
+    - fliplate
+    - bliplate
+  bus_door:
+    - door
+  bus_wheel:
+    - wheel
+  bus_headlight:
+    - headlight
+  bus_window:
+    - window
+part_id:
+  bus_body: 1
+  bus_mirror: 2
+  bus_plate: 3
+  bus_door: 4
+  bus_wheel: 5
+  bus_headlight: 6
+  bus_window: 7

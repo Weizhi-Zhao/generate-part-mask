@@ -54,6 +54,7 @@ def convert_yaml_to_args(yaml_dict, args):
     args.min_crop_ratio = yaml_dict["min_crop_ratio"]
     args.num_patchs_per_side = yaml_dict["num_patchs_per_side"]
     args.patch_size = yaml_dict["patch_size"]
+    args.epochs = yaml_dict["epochs"]
     args.train = True
     return args
 

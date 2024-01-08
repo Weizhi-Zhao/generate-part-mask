@@ -19,5 +19,6 @@ test_data_dir: "datasets/bus/test"
 min_crop_ratio: 0.6
 num_patchs_per_side: 1
 patch_size: 512
+epochs: 200
 
 output_dir: "/output"

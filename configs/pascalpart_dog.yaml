@@ -1,0 +1,42 @@
+category_name: dog
+part_aggregation:
+  dog_torso:
+    - torso
+  dog_head:
+    - head
+  dog_leg:
+    - lfleg
+    - rfleg
+    - lbleg
+    - rbleg
+  dog_paw:
+    - lfpa
+    - rfpa
+    - lbpa
+    - rbpa
+  dog_muzzle:
+    - muzzle
+  dog_neck:
+    - neck
+  dog_tail:
+    - tail
+  dog_eye:
+    - leye
+    - reye
+  dog_ear:
+    - lear
+    - rear
+  dog_nose:
+    - nose
+
+part_id:
+  dog_torso: 1
+  dog_head: 2
+  dog_leg: 3
+  dog_paw: 4
+  dog_muzzle: 5
+  dog_neck: 6
+  dog_tail: 7
+  dog_eye: 8
+  dog_ear: 9
+  dog_nose: 10
