@@ -309,7 +309,7 @@ class Slime(pl.LightningModule):
         self.val_ious = []
 
     def validation_step(self, batch, batch_idx):
-        image, mask = batch
+        image, mask, _ = batch
         mask = mask[0]
         final_mask = self.get_patched_masks(
             image,
@@ -378,13 +378,19 @@ class Slime(pl.LightningModule):
             os.makedirs(self.test_results_dir)
 
     def test_step(self, batch, batch_idx):
-        image, mask = batch
+        image, mask, path = batch
         mask_provided = not torch.all(mask == 0)
         mask = mask[0]
         final_mask = self.get_patched_masks(
             image,
             self.config.test_mask_size,
         )
+
+        # zwz
+        if self.config.save_mask:
+            from save_SLiMe_result import save_mask
+            save_mask(path[0].replace('.png', '.npy'), final_mask)
+
         if self.config.save_test_predictions:
             eroded_final_mask, final_mask_boundary = get_boundry_and_eroded_mask(
                 final_mask.cpu()

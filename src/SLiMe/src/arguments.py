@@ -99,5 +99,6 @@ def init_args():
     parser = add_dataset_args(parser)
     parser = add_train_args(parser)
     parser = add_test_args(parser)
+    parser.add_argument("--save_mask", type=bool, default=False)
     args = parser.parse_args("")
     return args

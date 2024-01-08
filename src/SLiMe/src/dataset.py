@@ -103,7 +103,7 @@ class Dataset(TorchDataset):
                 result = self.test_transform(image=np.array(image))
                 mask = 0
             image = result["image"]
-            return image / 255, mask
+            return image / 255, mask, self.image_paths[idx]
 
     def __len__(self):
         return len(self.image_paths)

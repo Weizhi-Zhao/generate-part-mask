@@ -23,6 +23,8 @@ def bbox_visualizer(ax, bbox):
 python src/SLiMe_part_masks_visualizer.py --img_path datasets/SLiMe/bus
 
 python src/SLiMe_part_masks_visualizer.py --img_path datasets/SLiMe/dog
+
+python src/SLiMe_part_masks_visualizer.py --img_path datasets/coco/bus_square
 '''
 if __name__ == '__main__':
     import argparse
@@ -33,9 +35,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
     _, ax = plt.subplots()
     for file in os.listdir(args.img_path):
-        if not file.endswith('.png'):
+        if not file.endswith('.npy'):
             continue
-        img = plt.imread(os.path.join(args.img_path, file))
-        masks = np.load(os.path.join(args.img_path, file.split('.')[0] + '.npy'))
+        img = plt.imread(os.path.join(args.img_path, file.replace('.npy', '.png')))
+        masks = np.load(os.path.join(args.img_path, file))
         mask_visualizer(ax, img, masks)
-        plt.pause(0.3)
+        plt.waitforbuttonpress()
+        # os.remove(os.path.join(args.img_path, file))
