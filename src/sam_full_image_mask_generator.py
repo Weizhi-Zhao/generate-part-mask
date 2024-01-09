@@ -6,6 +6,8 @@ from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+from collections import defaultdict
+from binary_mask_IOU import iomax, iou
 
 
 def show_anns(anns):
@@ -39,6 +41,16 @@ class SAM_Mask_Generator():
             masks = self.mask_generator.generate(img)
             with open(os.path.join(self.file_path, file.replace('.png', '.pkl')), 'wb') as f:
                 pickle.dump(masks, f)
+    '''
+    sort the masks by cover relation, 
+    smaller masks are in a higher priority, 
+    masks who have a cover relation shouls be put together
+    '''
+    # def build_tree(self, masks):
+    #     self.graph = defaultdict[list]
+    #     for i, u in enumerate(masks):
+    #         for j, v in enumerate(masks):
+    #             if u['area'] > v['area'] and iomax
 
 '''
 python src/sam_full_image_mask_generator.py --checkpoint checkpoints\sam\sam_vit_h_4b8939.pth --file_path datasets/coco/dog_square
@@ -51,6 +63,7 @@ if __name__ == '__main__':
     parser.add_argument('--device', type=str, default='cpu')
     parser.add_argument('--file_path', type=str, required=True)
     args = parser.parse_args()
+    
     # for file in os.listdir(args.file_path):
     #     if not file.endswith('.pkl'):
     #         continue
@@ -64,11 +77,16 @@ if __name__ == '__main__':
     #     show_anns(masks)
     #     plt.axis('off')
     #     plt.show()
-    generator = SAM_Mask_Generator(args.model_name, args.checkpoint, args.device, args.file_path)
-    generator.run()
+    sam = sam_model_registry[args.model_name](checkpoint=args.checkpoint)
+    sam.to(device=args.device)
+    mask_generator = SamAutomaticMaskGenerator(sam, output_mode='coco_rle')
+    file_path = args.file_path
+    for file in tqdm(os.listdir(file_path)):
+        if not file.endswith('.png'):
+            continue
+        img = cv2.imread(os.path.join(file_path, file))
+        masks = mask_generator.generate(img)
+        import pdb; pdb.set_trace()
 
-# plt.figure(figsize=(20,20))
-# plt.imshow(img)
-# show_anns(masks)
-# plt.axis('off')
-# plt.show()
+    # generator = SAM_Mask_Generator(args.model_name, args.checkpoint, args.device, args.file_path)
+    # generator.run()
