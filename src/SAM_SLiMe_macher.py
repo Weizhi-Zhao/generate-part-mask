@@ -175,7 +175,8 @@ class SAMSLiMeMacher():
             for seg in ann['segmentation']:
                 poly = np.array(seg).reshape((int(len(seg)/2), 2))
                 poly = poly - np.array([x1, y1])
-                poly = poly.reshape((1, -1))
+                # mast transfer to list
+                poly = poly.reshape((1, -1)).tolist()
                 rle = mask_utils.frPyObjects(poly, y2-y1, x2-x1)
                 binary_mask = mask_utils.decode(rle)
                 # # todo remove this
@@ -238,7 +239,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_vis_result', type=str, required=True)
     args = parser.parse_args()
     matcher = SAMSLiMeMacher(args.coco_ann_dir, args.dataset_dir, args.config_dir, args.visulize_step, args.save_vis_result)
-    matcher.process()
+    # matcher.process()
     # matcher = SAMSLiMeMacher(args.coco_ann_dir, args.dataset_dir, args.config_dir)
     # print(matcher.coco_anns[824])
     # coco = COCO('datasets\coco\instances_train2017.json')
@@ -249,23 +250,28 @@ if __name__ == '__main__':
     # # rle = mask_utils.frPyObjects([ann['counts']], ann['size'][0], ann['size'][1])
     # import pdb; pdb.set_trace()
     # # matcher.process()
-    # file_name = '256981_2171534'
-    # ann = [ann for ann in matcher.coco_anns if ann['image_id'] == 256981 and ann['id'] == 2171534][0]
-    # SLiMe_masks, mask_ids = matcher.read_SLiMe_masks(file_name)
-    # gt_mask = matcher.get_cropped_gt_binary_mask(ann)
+    file_name = '577403_163619'
+    ann = [ann for ann in matcher.coco_anns if ann['image_id'] == 577403 and ann['id'] == 163619][0]
+    SLiMe_masks, mask_ids = matcher.read_SLiMe_masks(file_name)
+    gt_mask = matcher.get_cropped_gt_binary_mask(ann)
 
     
 
-    # img = cv2.imread(os.path.join(self.dataset_dir, str(ann['image_id']) + '_' + str(ann['id']) + '.png'))
-    # plt.clf()
-    # plt.subplot(1, 2, 1)
-    # plt.title('GT')
-    # plt.imshow(img)
-    # show_int32_masks(img, gt_mask)
-    # plt.subplot(1, 2, 2)
-    # plt.title('SLiMe')
-    # np_masks = np.zeros(SLiMe_masks[0].shape, dtype=np.int32)
-    # for r_mask, mask_id in zip(SLiMe_masks, mask_ids):
-    #     np_masks[r_mask] = mask_id
-    # show_int32_masks(img, np_masks)
-    # plt.show()
+    img = cv2.imread(os.path.join(matcher.dataset_dir, str(ann['image_id']) + '_' + str(ann['id']) + '.png'))
+    plt.clf()
+    plt.subplot(1, 2, 1)
+    plt.title('GT')
+    plt.imshow(img)
+    gt_mask = gt_mask.astype(np.int32) * 6
+    # gt_mask[0, 0:5] = np.array([[1,2,3,4,5]])
+    gt_mask[0,0]=5
+    gt_mask[0,1]=7
+    # import pdb; pdb.set_trace()
+    show_int32_masks(img, gt_mask)
+    plt.subplot(1, 2, 2)
+    plt.title('SLiMe')
+    np_masks = np.zeros(SLiMe_masks[0].shape, dtype=np.int32)
+    for r_mask, mask_id in zip(SLiMe_masks, mask_ids):
+        np_masks[r_mask] = mask_id
+    show_int32_masks(img, np_masks)
+    plt.show()
