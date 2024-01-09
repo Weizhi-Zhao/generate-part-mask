@@ -5,13 +5,13 @@ import os
 import shutil
 from tqdm import tqdm
 
-class PascalPart_Selecter():
+class PascalPartSelecter():
     def __init__(self, annotations_part_path, images_path):
         self.annotations_part_path = annotations_part_path
         self.images_path = images_path
 
     def copy(self, category_name, output_dir):
-        img_name_list = self._img_name_list_of_cat(category_name)
+        img_name_list = self.img_name_list_of_cat(category_name)
         print(f'pascalpart selecter: copying {category_name} images to {output_dir}')
         for img_name in tqdm(img_name_list):
             img_path = os.path.join(self.images_path, img_name + '.jpg')
@@ -19,7 +19,7 @@ class PascalPart_Selecter():
             shutil.copy(img_path, output_dir)
             shutil.copy(anno_path, output_dir)
 
-    def _img_name_list_of_cat(self, cat):
+    def img_name_list_of_cat(self, cat):
         img_name_list = []
         print(f"pascalpart selecter: getting image name list of category {cat}")
         for file in tqdm(os.listdir(self.annotations_part_path)):
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     parser.add_argument('--cat_names', nargs='+', type=str, required=True)
     parser.add_argument('--output_dir', type=str, required=True)
     args = parser.parse_args()
-    selecter = PascalPart_Selecter(args.annotations_part_path, args.images_path)
+    selecter = PascalPartSelecter(args.annotations_part_path, args.images_path)
     for cat_name in args.cat_names:
         output_dir = os.path.join(args.output_dir, cat_name)
         if not os.path.exists(output_dir):

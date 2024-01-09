@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 import json
 
 
-class COCO_Square_Cropper:
+class COCOSquareCropper:
     def __init__(self, cat_name, bbox_thres, coco_ann_dir, img_dir, output_dir):
         self.coco = COCO(coco_ann_dir)
         self.cat_name = cat_name
@@ -19,14 +19,14 @@ class COCO_Square_Cropper:
             os.makedirs(output_dir)
 
     def process(self):
-        img_ids = self._get_img_ids()
+        img_ids = self.get_img_ids()
         annotations = []
         print(f"COCO Square Cropper: processing images of {self.cat_name}")
         for img_id in tqdm(img_ids):
             ann_ids = self.coco.getAnnIds(imgIds=img_id, catIds=[self.cat_id], iscrowd=None)
             anns = self.coco.loadAnns(ann_ids)
             for ann in anns:
-                crop_res = self._crop(img_id, ann)
+                crop_res = self.crop(img_id, ann)
                 if crop_res is None:
                     continue
                 square_img, position = crop_res
@@ -36,7 +36,7 @@ class COCO_Square_Cropper:
         with open(os.path.join(self.output_dir, f'annotations_{self.cat_name}.json'), 'w') as f:
             json.dump(annotations, f)
 
-    def _crop(self, img_id, ann):
+    def crop(self, img_id, ann):
         img_info = self.coco.loadImgs(img_id)[0]
         img = Image.open(os.path.join(self.img_dir, img_info['file_name']))
         # make sure the image is not grayscale
@@ -65,7 +65,7 @@ class COCO_Square_Cropper:
         square_img = square_img.resize((512, 512))
         return square_img, [square_x1, square_y1, square_x2, square_y2]
 
-    def _get_img_ids(self):
+    def get_img_ids(self):
         img_id_list = []
         for file in os.listdir(self.img_dir):
             if not file.endswith('.jpg'):
@@ -85,5 +85,5 @@ if __name__ == '__main__':
     parser.add_argument('--img_dir', type=str, required=True)
     parser.add_argument('--output_dir', type=str, required=True)
     args = parser.parse_args()
-    csc = COCO_Square_Cropper(args.cat_name, args.bbox_thres, args.coco_ann_dir, args.img_dir, args.output_dir)
+    csc = COCOSquareCropper(args.cat_name, args.bbox_thres, args.coco_ann_dir, args.img_dir, args.output_dir)
     csc.process()

@@ -6,7 +6,7 @@ from tqdm import tqdm
 import cv2
 
 
-class SLiMe_Data_Generator:
+class SLiMeDataGenerator:
     def __init__(self, config, obj_size_thres, dataset_path, target_path):
         '''
         obj_size_thres: area of object box / area of image, if smaller than this thres, ignore the image
@@ -21,7 +21,7 @@ class SLiMe_Data_Generator:
             os.makedirs(self.target_path)
 
     def save(self):
-        masks = self._generate_masks()
+        masks = self.generate_masks()
         print(
             f"SLiMe Data Genetator: saving image and part masks of {self.config['category_name']} to {self.target_path}")
         for mask in tqdm(masks):
@@ -32,7 +32,7 @@ class SLiMe_Data_Generator:
             np.save(os.path.join(self.target_path,
                     img_name + '.npy'), part_masks)
 
-    def _generate_masks(self):
+    def generate_masks(self):
         '''
         returns a list, each element is a dict:
         {
@@ -64,7 +64,7 @@ class SLiMe_Data_Generator:
                     # conbine all part masks
                 for part in obj[3][:][0]:
                     part_name = part['part_name'][0].split('_')[0]
-                    part_id = self._part_name_to_id(part_name)
+                    part_id = self.part_name_to_id(part_name)
                     prior = np.ones(part_masks.shape, np.int32) * part_id
                     part_masks[np.logical_and(
                         part['mask'] == 1, part_masks <= prior)] = part_id
@@ -72,7 +72,7 @@ class SLiMe_Data_Generator:
             if np.all(~obj_masks):
                 continue
             # bbox: [x1, y1, x2, y2]
-            _, bbox_area = self._get_bbox(obj_masks)
+            _, bbox_area = self.get_bbox(obj_masks)
             # make sure the object is not too small
             if bbox_area / (img_shape[0] * img_shape[1]) < self.obj_size_thres:
                 continue
@@ -83,14 +83,14 @@ class SLiMe_Data_Generator:
             masks.append(one_img_mask)
         return masks
 
-    def _part_name_to_id(self, part_name):
+    def part_name_to_id(self, part_name):
         for aggregate_part_name in self.config['part_aggregation'].keys():
             if part_name in self.config['part_aggregation'][aggregate_part_name]:
                 return self.config['part_id'][aggregate_part_name]
         print("error: part name not found")
         return 0
 
-    def _get_bbox(self, mask):
+    def get_bbox(self, mask):
         # mask: ndarray(np.bool_)
         rows, cols = np.where(mask)
         x1 = np.min(cols)
@@ -114,6 +114,6 @@ if __name__ == "__main__":
     parser.add_argument('--dataset_path', type=str, required=True)
     parser.add_argument('--target_path', type=str, required=True)
     args = parser.parse_args()
-    generator = SLiMe_Data_Generator(args.config, args.obj_size_thres,
+    generator = SLiMeDataGenerator(args.config, args.obj_size_thres,
                                      args.dataset_path, args.target_path)
     generator.save()

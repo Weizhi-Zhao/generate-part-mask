@@ -6,7 +6,7 @@ import shutil
 from tqdm import tqdm
 
 
-class COCO_Selecter:
+class COCOSelecter:
     def __init__(self, ann_file, coco_path):
         self.coco = COCO(ann_file)
         self.coco_path = coco_path
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     parser.add_argument("--cat_names", nargs='+', type=str, required=True)
     parser.add_argument("--output_dir", type=str, required=True)
     args = parser.parse_args()
-    selecter = COCO_Selecter(args.ann_file, args.coco_path)
+    selecter = COCOSelecter(args.ann_file, args.coco_path)
     for cat_name in args.cat_names:
         output_dir = os.path.join(args.output_dir, cat_name)
         if not os.path.exists(output_dir):
