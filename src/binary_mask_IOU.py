@@ -1,4 +1,3 @@
-import numpy as np
 
 def iomax(a_mask, b_mask):
     intersection = a_mask & b_mask

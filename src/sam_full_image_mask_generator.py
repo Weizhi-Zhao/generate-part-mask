@@ -7,27 +7,8 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from collections import defaultdict
-from binary_mask_IOU import iomax, iou
+from binary_mask_IOU import iomax
 from pycocotools import mask
-
-
-def show_masks(masks, step=False, alpha=0.35):
-    if len(masks) == 0:
-        return
-    ax = plt.gca()
-    ax.set_autoscale_on(False)
-    binary_masks = [mask.decode(m['segmentation']).astype(np.bool_) for m in masks]
-    img = np.ones((binary_masks[0].shape[0],
-                  binary_masks[0].shape[1], 4))
-    img[:, :, 3] = 0
-    for m in binary_masks:
-        color_mask = np.concatenate([np.random.random(3), [alpha]])
-        img[m] = color_mask
-        if step:
-            ax.imshow(img)
-            plt.draw()
-            plt.waitforbuttonpress()
-    ax.imshow(img)
 
 class SAMMaskGenerator():
     def __init__(self, model_name, checkpoint, device, file_path, cover_thres=0.9):
