@@ -5,6 +5,7 @@ import os
 import shutil
 from tqdm import tqdm
 
+# todo delete iscrowd images
 
 class COCOSelecter:
     def __init__(self, ann_file, coco_path):

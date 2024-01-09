@@ -31,6 +31,7 @@ class COCOSquareCropper:
                     continue
                 square_img, position = crop_res
                 square_img.save(os.path.join(self.output_dir, f'{img_id}_{ann["id"]}.png'))
+                # ! the position is a leftside close and rightside open interval
                 ann.update({'position': position})
                 annotations.append(ann)
         with open(os.path.join(self.output_dir, f'annotations_{self.cat_name}.json'), 'w') as f:
@@ -52,8 +53,9 @@ class COCOSquareCropper:
         desired_len = round(1.2 * max(w_bbox, h_bbox))
         square_x1 = round(center_x - desired_len / 2.0)
         square_y1 = round(center_y - desired_len / 2.0)
-        square_x2 = round(center_x + desired_len / 2.0)
-        square_y2 = round(center_y + desired_len / 2.0)
+        # ! after I generated the dataset, I found that the right side should +1, whatever
+        square_x2 = round(center_x + desired_len / 2.0) + 1
+        square_y2 = round(center_y + desired_len / 2.0) + 1
         square_img = img.crop((max(0, square_x1), max(0, square_y1), min(
             img_info['width'], square_x2), min(img_info['height'], square_y2)))
         if square_x1 < 0 or square_y1 < 0 or square_x2 > img_info['width'] or square_y2 > img_info['height']:

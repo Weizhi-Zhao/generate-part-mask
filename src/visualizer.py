@@ -43,11 +43,11 @@ def show_rle_masks(masks, step=False, alpha=0.35):
 
 
 '''
-python src/SLiMe_part_masks_visualizer.py --img_path datasets/SLiMe/bus
+python src/visualizer.py --img_path datasets/SLiMe/bus
 
-python src/SLiMe_part_masks_visualizer.py --img_path datasets/SLiMe/dog
+python src/visualizer.py --img_path datasets/SLiMe/dog
 
-python src/SLiMe_part_masks_visualizer.py --img_path datasets/coco/bus_square
+python src/visualizer.py --img_path datasets/coco/bus_square
 '''
 if __name__ == '__main__':
     import argparse
@@ -62,6 +62,6 @@ if __name__ == '__main__':
             continue
         img = plt.imread(os.path.join(args.img_path, file.replace('.npy', '.png')))
         masks = np.load(os.path.join(args.img_path, file))
-        show_int32_masks(ax, img, masks)
+        show_int32_masks(img, masks)
         plt.waitforbuttonpress()
         # os.remove(os.path.join(args.img_path, file))
