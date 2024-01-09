@@ -33,9 +33,9 @@ class SAMSLiMeMacher():
             fig = plt.figure(figsize=(18, 9))
         print(f"SAM SLiMe Macher: processing images of {self.config['category_name']}")
         for step, ann in enumerate(tqdm(self.coco_anns)):
-            # todo remove this
-            if step < 824:
-                continue
+            # # todo remove this
+            # if step < 824:
+            #     continue
             if self.visulize_step is not None and step % self.visulize_step != 0:
                 continue
             file_name = str(ann['image_id']) + '_' + str(ann['id'])
@@ -178,15 +178,15 @@ class SAMSLiMeMacher():
                 poly = poly.reshape((1, -1))
                 rle = mask_utils.frPyObjects(poly, y2-y1, x2-x1)
                 binary_mask = mask_utils.decode(rle)
-                # todo remove this
-                import pdb; pdb.set_trace()
+                # # todo remove this
+                # import pdb; pdb.set_trace()
                 binary_mask = cv2.resize(binary_mask, (512, 512), interpolation=cv2.INTER_NEAREST)
                 binary_mask = binary_mask.astype(np.bool_)
                 final_binary_mask = np.logical_or(final_binary_mask, binary_mask)
         else:
             # mask
-            # todo remove this
-            import pdb; pdb.set_trace()
+            # # todo remove this
+            # import pdb; pdb.set_trace()
             if type(ann['segmentation']['counts']) == list:
                 rle = mask_utils.frPyObjects([ann['segmentation']], ann['segmentation']['size'][0], ann['segmentation']['size'][1])
             else:
