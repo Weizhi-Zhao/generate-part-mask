@@ -27,12 +27,19 @@ class SAMSLiMeMacher():
                 os.makedirs(self.save_vis_result)
         self.SAM_GT_THRES = SAM_GT_THRES
 
-    def process(self):
+    def match(self):
+        anns = self.coco_anns
+        annotations = self.worker(anns)
+        if self.visulize_step is None:
+            with open(os.path.join(self.dataset_dir, f"part_annotations_{self.config['category_name']}.json"), 'w') as f:
+                json.dump(annotations, f)
+    
+    def worker(self, coco_anns):
         annotations = []
         if self.visulize_step is not None:
-            fig = plt.figure(figsize=(18, 9))
+            plt.figure(figsize=(18, 9))
         print(f"SAM SLiMe Macher: processing images of {self.config['category_name']}")
-        for step, ann in enumerate(tqdm(self.coco_anns)):
+        for step, ann in enumerate(tqdm(coco_anns)):
             # # todo remove this
             # if step < 824:
             #     continue
@@ -100,6 +107,7 @@ class SAMSLiMeMacher():
                 plt.waitforbuttonpress()
 
         if self.visulize_step is None:
+            return annotations
             with open(os.path.join(self.dataset_dir, f"part_annotations_{self.config['category_name']}.json"), 'w') as f:
                 json.dump(annotations, f)
 
@@ -275,3 +283,4 @@ if __name__ == '__main__':
         np_masks[r_mask] = mask_id
     show_int32_masks(img, np_masks)
     plt.show()
+
