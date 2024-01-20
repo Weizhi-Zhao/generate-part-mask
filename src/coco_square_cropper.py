@@ -34,21 +34,22 @@ class COCOSquareCropper:
                 # ! the position is a leftside close and rightside open interval
                 ann.update({'position': position})
                 annotations.append(ann)
-        with open(os.path.join(self.output_dir, f'annotations_{self.cat_name}.json'), 'w') as f:
+        with open(os.path.join(self.output_dir, f'square_annotations_{self.cat_name}.json'), 'w') as f:
             json.dump(annotations, f)
 
     def crop(self, img_id, ann):
         img_info = self.coco.loadImgs(img_id)[0]
         img = Image.open(os.path.join(self.img_dir, img_info['file_name']))
         # make sure the image is not grayscale
-        if len(img.split()) == 1:
+        if len(img.getbands()) == 1:
             return None
         bbox = ann['bbox']
         x_bbox, y_bbox, w_bbox, h_bbox = bbox
         if (h_bbox * w_bbox) / (img_info['width'] * img_info['height']) < self.bbox_thres:
             return None
         x1, y1, x2, y2 = x_bbox, y_bbox, x_bbox + w_bbox, y_bbox + h_bbox
-        center_x, center_y = (x1 + x2) / 2.0, (y1 + y2) / 2.0
+        # because the x2 is actually not in the square zrea, we need to minus 1 to cauculate the center
+        center_x, center_y = (x1 + x2 - 1) / 2.0, (y1 + y2 - 1) / 2.0
         # the desired length of new croped image
         desired_len = round(1.2 * max(w_bbox, h_bbox))
         square_x1 = round(center_x - desired_len / 2.0)
@@ -88,4 +89,8 @@ if __name__ == '__main__':
     parser.add_argument('--output_dir', type=str, required=True)
     args = parser.parse_args()
     csc = COCOSquareCropper(args.cat_name, args.bbox_thres, args.coco_ann_dir, args.img_dir, args.output_dir)
+    # delete all .png files in the output_dir
+    for file in os.listdir(args.output_dir):
+        if file.endswith('.png'):
+            os.remove(os.path.join(args.output_dir, file))
     csc.process()

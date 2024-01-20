@@ -31,7 +31,7 @@ class SAMSLiMeMacher():
         anns = self.coco_anns
         annotations = self.worker(anns)
         if self.visulize_step is None:
-            with open(os.path.join(self.dataset_dir, f"part_annotations_{self.config['category_name']}.json"), 'w') as f:
+            with open(os.path.join(self.dataset_dir, f"part_square_annotations_{self.config['category_name']}.json"), 'w') as f:
                 json.dump(annotations, f)
     
     def worker(self, coco_anns):
@@ -40,9 +40,9 @@ class SAMSLiMeMacher():
             plt.figure(figsize=(18, 9))
         print(f"SAM SLiMe Macher: processing images of {self.config['category_name']}")
         for step, ann in enumerate(tqdm(coco_anns)):
-            # # todo remove this
-            # if step < 824:
-            #     continue
+            # todo: remove
+            if step < 820:
+                continue
             if self.visulize_step is not None and step % self.visulize_step != 0:
                 continue
             file_name = str(ann['image_id']) + '_' + str(ann['id'])
@@ -50,9 +50,13 @@ class SAMSLiMeMacher():
                 print(f"SAM SLiMe Macher error: file {file_name + '.png'} not found")
                 continue
             SLiMe_masks, mask_ids = self.read_SLiMe_masks(file_name)
+            # ann represents the original annotation of the object (which was cropped to square)
             gt_mask = self.get_cropped_gt_binary_mask(ann)
+            # GT mask and SLiMe masks are in binary format (np.bool_)
             restricted_SLiMe_masks = self.restrict_SLiMe_masks(SLiMe_masks, gt_mask)
             # ori_SAM_masks is in RLE format
+            # SAM_masks is in binary format (np.bool_)
+            # SAM_masks are used for matching, and ori_SAM_masks are used to save results
             SAM_masks, ori_SAM_masks = self.read_SAM_masks(file_name)
             part_anns = []
             for SLiMe_mask, mask_id in zip(restricted_SLiMe_masks, mask_ids):
@@ -60,28 +64,29 @@ class SAMSLiMeMacher():
                 part_name = self.part_id_to_name(mask_id)
                 for best_mask_id in best_mask_ids:
                     part_ann = {
-                        'part_mask_id': best_mask_id,
-                        'part_id': mask_id,
+                        'part_mask_id': best_mask_id, # the id of the best SAM mask that matches the SLiMe mask
+                        'part_id': mask_id, # the id of part name in pascal part
                         'part_name': part_name,
-                        'bbox': ori_SAM_masks[best_mask_id]['bbox'],
+                        'bbox': ori_SAM_masks[best_mask_id]['bbox'], # bbox of part in the square cropped image
                         'segmentation': ori_SAM_masks[best_mask_id]['segmentation'],
                     }
                     part_anns.append(part_ann)
             annotations.append({
-                'image_id': ann['image_id'],
-                'id': ann['id'],
+                'image_id': ann['image_id'], # id of coco image
+                'id': ann['id'], # id of coco annotation
                 'position': ann['position'],
                 'category_id': ann['category_id'],
                 'bbox': ann['bbox'],
+                'segmentation': ann['segmentation'],
+                # all the aegmentation and bbox in part_anns are in the square cropped image, relative to the position
+                # infact, this annotation is for the square cropped image
                 'part_annotations': part_anns
             })
 
             if self.visulize_step is not None:
                 img = cv2.imread(os.path.join(self.dataset_dir, str(ann['image_id']) + '_' + str(ann['id']) + '.png'))
                 plt.clf()
-                # todo remove this
-                plt.subplot(1, 3, 1)
-                # plt.subplot(1, 2, 1)
+                plt.subplot(1, 2, 1)
                 plt.title('SAM')
                 plt.imshow(img)
                 part_rle_masks = [part_ann['segmentation'] for part_ann in part_anns]
@@ -89,18 +94,12 @@ class SAMSLiMeMacher():
                 bboxs = [part_ann['bbox'] for part_ann in part_anns]
                 names = [part_ann['part_name'] for part_ann in part_anns]
                 show_bbox(bboxs, names)
-                # todo remove this
-                plt.subplot(1, 3, 2)
-                # plt.subplot(1, 2, 2)
+                plt.subplot(1, 2, 2)
                 plt.title('SLiMe')
                 np_masks = np.zeros(restricted_SLiMe_masks[0].shape, dtype=np.int32)
                 for r_mask, mask_id in zip(restricted_SLiMe_masks, mask_ids):
                     np_masks[r_mask] = mask_id
                 show_int32_masks(img, np_masks)
-                # todo remove this
-                plt.subplot(1, 3, 3)
-                plt.title('GT')
-                show_int32_masks(img, gt_mask)
                 plt.draw()
                 if self.save_vis_result is not None:
                     plt.savefig(os.path.join(self.save_vis_result, f"{file_name}.png"))
@@ -108,8 +107,6 @@ class SAMSLiMeMacher():
 
         if self.visulize_step is None:
             return annotations
-            with open(os.path.join(self.dataset_dir, f"part_annotations_{self.config['category_name']}.json"), 'w') as f:
-                json.dump(annotations, f)
 
     def find_best_masks(self, SAM_MASKS, SLIME_MASK, gt_mask):
         ALPHA = 0.5
@@ -174,6 +171,8 @@ class SAMSLiMeMacher():
     
     def get_cropped_gt_binary_mask(self, ann):
         # ! if the dataset is generated correctly, the position should be a leftside close and rightside open interval, however the dataset was wrong, I just fixed it and have to regenerate the dataset
+        # the code had been fixed, but didn't regenerate dataset yet
+        # pictures have been regenerated, but the annotations are still wrong, I have to regenerate the annotations
         x1, y1, x2, y2 = ann['position']
         polygon_masks = ann['segmentation']
         final_binary_mask = np.zeros((512, 512), dtype=np.bool_)
@@ -187,15 +186,11 @@ class SAMSLiMeMacher():
                 poly = poly.reshape((1, -1)).tolist()
                 rle = mask_utils.frPyObjects(poly, y2-y1, x2-x1)
                 binary_mask = mask_utils.decode(rle)
-                # # todo remove this
-                # import pdb; pdb.set_trace()
                 binary_mask = cv2.resize(binary_mask, (512, 512), interpolation=cv2.INTER_NEAREST)
                 binary_mask = binary_mask.astype(np.bool_)
                 final_binary_mask = np.logical_or(final_binary_mask, binary_mask)
         else:
             # mask
-            # # todo remove this
-            # import pdb; pdb.set_trace()
             if type(ann['segmentation']['counts']) == list:
                 rle = mask_utils.frPyObjects([ann['segmentation']], ann['segmentation']['size'][0], ann['segmentation']['size'][1])
             else:
@@ -211,6 +206,7 @@ class SAMSLiMeMacher():
         return final_binary_mask
 
     def restrict_SLiMe_masks(self, SLiMe_masks, gt_mask):
+        # SLiMe_masks is a list of binary masks, type: np.bool_
         for i, mask in enumerate(SLiMe_masks):
             SLiMe_masks[i] = np.logical_and(mask, gt_mask)
         return SLiMe_masks
@@ -235,7 +231,7 @@ class SAMSLiMeMacher():
 '''
 python src/SAM_SLiMe_macher.py --coco_ann_dir datasets/coco/bus_square/annotations_bus.json --dataset_dir datasets/coco/bus_square --config_dir configs/pascalpart_bus.yaml --visulize_step 1 --save_vis_result outputs/coco_bus_result
 
-python src/SAM_SLiMe_macher.py --coco_ann_dir datasets/coco/bus_square/annotations_bus.json --dataset_dir datasets/coco/bus_square --config_dir configs/pascalpart_bus.yaml
+python src/SAM_SLiMe_matcher.py --coco_ann_dir datasets/coco/bus_square/square_annotations_bus.json --dataset_dir datasets/coco/bus_square --config_dir configs/pascalpart_bus.yaml
 '''
 if __name__ == '__main__':
     import argparse
@@ -244,43 +240,8 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_dir', type=str, required=True)
     parser.add_argument('--config_dir', type=str, required=True)
     parser.add_argument('--visulize_step', type=int, default=1)
-    parser.add_argument('--save_vis_result', type=str, required=True)
+    parser.add_argument('--save_vis_result', type=str, default=None)
     args = parser.parse_args()
-    matcher = SAMSLiMeMacher(args.coco_ann_dir, args.dataset_dir, args.config_dir, args.visulize_step, args.save_vis_result)
-    # matcher.process()
-    # matcher = SAMSLiMeMacher(args.coco_ann_dir, args.dataset_dir, args.config_dir)
-    # print(matcher.coco_anns[824])
-    # coco = COCO('datasets\coco\instances_train2017.json')
-    # print(coco.loadAnns([900600248488]))
-    # ann = coco.loadAnns([900600248488])
-    # coco.showAnns([ann])
-    # plt.show()
-    # # rle = mask_utils.frPyObjects([ann['counts']], ann['size'][0], ann['size'][1])
-    # import pdb; pdb.set_trace()
-    # # matcher.process()
-    file_name = '577403_163619'
-    ann = [ann for ann in matcher.coco_anns if ann['image_id'] == 577403 and ann['id'] == 163619][0]
-    SLiMe_masks, mask_ids = matcher.read_SLiMe_masks(file_name)
-    gt_mask = matcher.get_cropped_gt_binary_mask(ann)
-
-    
-
-    img = cv2.imread(os.path.join(matcher.dataset_dir, str(ann['image_id']) + '_' + str(ann['id']) + '.png'))
-    plt.clf()
-    plt.subplot(1, 2, 1)
-    plt.title('GT')
-    plt.imshow(img)
-    gt_mask = gt_mask.astype(np.int32) * 6
-    # gt_mask[0, 0:5] = np.array([[1,2,3,4,5]])
-    gt_mask[0,0]=5
-    gt_mask[0,1]=7
-    # import pdb; pdb.set_trace()
-    show_int32_masks(img, gt_mask)
-    plt.subplot(1, 2, 2)
-    plt.title('SLiMe')
-    np_masks = np.zeros(SLiMe_masks[0].shape, dtype=np.int32)
-    for r_mask, mask_id in zip(SLiMe_masks, mask_ids):
-        np_masks[r_mask] = mask_id
-    show_int32_masks(img, np_masks)
-    plt.show()
+    matcher = SAMSLiMeMacher(args.coco_ann_dir, args.dataset_dir, args.config_dir)
+    matcher.match()
 

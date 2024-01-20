@@ -5,7 +5,7 @@ import os
 import shutil
 from tqdm import tqdm
 
-# todo delete iscrowd images
+# deleted iscrowd images
 
 class COCOSelecter:
     def __init__(self, ann_file, coco_path):
@@ -13,11 +13,18 @@ class COCOSelecter:
         self.coco_path = coco_path
 
     def copy(self, category_name, output_dir):
-        cat_id = self.coco.getCatIds(category_name)[0]
-        img_ids = self.coco.catToImgs[cat_id]
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        cat_ids = self.coco.getCatIds(catNms=[category_name])
+        img_ids = self.coco.getImgIds(catIds=cat_ids)
         img_infos = self.coco.loadImgs(img_ids)
         print(f"coco selecter: copying {category_name} images to {output_dir}")
         for img_info in tqdm(img_infos):
+            ann_ids = self.coco.getAnnIds(imgIds=img_info["id"], catIds=cat_ids, iscrowd=None)
+            anns = self.coco.loadAnns(ann_ids)
+            # if any of the annotations is crowd, skip the image
+            if any(ann['iscrowd'] for ann in anns):
+                continue
             img_path = os.path.join(self.coco_path, img_info["file_name"])
             shutil.copy(img_path, output_dir)
 
@@ -37,6 +44,4 @@ if __name__ == "__main__":
     selecter = COCOSelecter(args.ann_file, args.coco_path)
     for cat_name in args.cat_names:
         output_dir = os.path.join(args.output_dir, cat_name)
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
         selecter.copy(cat_name, output_dir)
