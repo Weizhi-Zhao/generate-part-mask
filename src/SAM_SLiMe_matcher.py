@@ -29,6 +29,7 @@ class SAMSLiMeMacher():
 
     def match(self):
         anns = self.coco_anns
+        print(f"SAM SLiMe Macher: processing images of {self.config['category_name']}")
         annotations = self.worker(anns)
         if self.visulize_step is None:
             with open(os.path.join(self.dataset_dir, f"part_square_annotations_{self.config['category_name']}.json"), 'w') as f:
@@ -38,11 +39,7 @@ class SAMSLiMeMacher():
         annotations = []
         if self.visulize_step is not None:
             plt.figure(figsize=(18, 9))
-        print(f"SAM SLiMe Macher: processing images of {self.config['category_name']}")
-        for step, ann in enumerate(tqdm(coco_anns)):
-            # todo: remove
-            if step < 820:
-                continue
+        for step, ann in enumerate(coco_anns):
             if self.visulize_step is not None and step % self.visulize_step != 0:
                 continue
             file_name = str(ann['image_id']) + '_' + str(ann['id'])
