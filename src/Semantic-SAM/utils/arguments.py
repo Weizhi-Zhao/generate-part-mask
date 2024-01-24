@@ -3,6 +3,10 @@ import json
 import argparse
 import logging
 
+import sys
+
+sys.path.append("./src/Semantic-SAM")
+
 logger = logging.getLogger(__name__)
 
 

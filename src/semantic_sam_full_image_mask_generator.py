@@ -8,17 +8,13 @@ import numpy as np
 from collections import defaultdict
 from binary_mask_IOU import iomax
 from pycocotools import mask
-
+import sys
+sys.path.append("./src/Semantic-SAM")
 from semantic_sam import prepare_image, plot_results, build_semantic_sam, SemanticSamAutomaticMaskGenerator
-original_image, input_image = prepare_image(image_pth='examples/dog.jpg')  # change the image path to your image
-mask_generator = SemanticSamAutomaticMaskGenerator(build_semantic_sam(model_type='<model_type>', ckpt='</your/ckpt/path>')) # model_type: 'L' / 'T', depends on your checkpint
-masks = mask_generator.generate(input_image)
 
 class SemanticSAMMaskGenerator():
-    def __init__(self, model_name, checkpoint, device, file_path, cover_thres=0.9):
-        sam = sam_model_registry[model_name](checkpoint=checkpoint)
-        sam.to(device=device)
-        self.mask_generator = SamAutomaticMaskGenerator(sam, output_mode='coco_rle')
+    def __init__(self, file_path, cover_thres=0.9):
+        self.mask_generator = SemanticSamAutomaticMaskGenerator(build_semantic_sam(model_type='L', ckpt='checkpoints/Semantic-SAM/swinl_only_sam_many2many.pth')) # model_type: 'L' / 'T', depends on your checkpint
         self.file_path = file_path
         # how much area of a mask should be covered by another mask to be considered as a cover relation
         self.cover_thres = cover_thres
@@ -28,8 +24,9 @@ class SemanticSAMMaskGenerator():
         for file in tqdm(os.listdir(self.file_path)):
             if not file.endswith('.png'):
                 continue
-            img = cv2.imread(os.path.join(self.file_path, file))
-            masks = self.mask_generator.generate(img)
+            # img = cv2.imread(os.path.join(self.file_path, file))
+            original_image, input_image = prepare_image(image_pth=os.path.join(self.file_path, file))
+            masks = self.mask_generator.generate(input_image)
             masks = self.topological_sort_masks(masks)
             with open(os.path.join(self.file_path, file.replace('.png', '.pkl')), 'wb') as f:
                 pickle.dump(masks, f)
@@ -67,16 +64,14 @@ class SemanticSAMMaskGenerator():
         order.append(u)
 
 '''
-python src/sam_full_image_mask_generator.py --checkpoint checkpoints\sam\sam_vit_h_4b8939.pth --file_path datasets/coco/dog_square
+python src/semantic_sam_full_image_mask_generator.py --checkpoint checkpoints\sam\sam_vit_h_4b8939.pth --file_path datasets/coco/dog_square
 '''
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_name', type=str, default='vit_h')
-    parser.add_argument('--checkpoint', type=str, required=True)
     parser.add_argument('--device', type=str, default='cpu')
     parser.add_argument('--file_path', type=str, required=True)
     args = parser.parse_args()
 
-    generator = SAMMaskGenerator(args.model_name, args.checkpoint, args.device, args.file_path)
+    generator = SemanticSAMMaskGenerator(args.file_path)
     generator.run()
