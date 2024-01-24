@@ -77,7 +77,7 @@ class COCOSquareCropper:
         return img_id_list
 
 '''
-python src/coco_square_cropper.py --cat_name bus --bbox_thres 0.2 --coco_ann_dir datasets/coco/instances_train2017.json --img_dir datasets/coco/bus --output_dir datasets/coco/bus_square
+python src/coco_square_cropper.py --cat_name dog --bbox_thres 0.2 --coco_ann_dir datasets/coco/instances_train2017.json --img_dir datasets/coco/dog --output_dir datasets/coco/dog_square
 '''
 if __name__ == '__main__':
     import argparse

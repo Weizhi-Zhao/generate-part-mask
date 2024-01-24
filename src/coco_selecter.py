@@ -30,7 +30,7 @@ class COCOSelecter:
 
 
 '''
-python src/coco_selecter.py --ann_file D:/dataset/coco/annotations_trainval2017/annotations/instances_train2017.json --coco_path D:/dataset/coco/train2017 --cat_names bus dog --output_dir ./datasets/coco
+python src/coco_selecter.py --ann_file datasets/coco/instances_train2017.json --coco_path D:/dataset/coco/train2017 --cat_names dog --output_dir ./datasets/coco
 '''
 
 if __name__ == "__main__":
